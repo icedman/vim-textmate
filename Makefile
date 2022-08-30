@@ -12,14 +12,13 @@ build:
 	cp build/textmate.so ./
 
 install:
-	echo "install not available"
+	mkdir -p ~/.vim/lua/vim-textmate
+	cp -R ./textmate.so ~/.vim/lua/
+	cp -R ./vim-textmate.lua ~/.vim/lua/vim-textmate
 
-# install:
-# 	mkdir -p ~/.config/nvim/lua/
-# 	cp -R ./lua/nvim-textmate ~/.config/nvim/lua/
-
-# uninstall:
-# 	rm -rf ~/.config/nvim/lua/nvim-textmate
+uninstall:
+	rm -R ~/.vim/lua/vim-textmate*
+	rm ~/.vim/lua/textmate.*
 
 clean:
 	rm -rf build
