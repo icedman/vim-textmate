@@ -9,7 +9,17 @@ module.highlight_set_extensions_dir(vim.fn.expand("~/.editor/extensions/"))
 module.highlight_load_theme("Monokai")
 
 local props = {}
-local buffers = {}
+local _buffers = {}
+
+local function buffers(id)
+	if not _buffers[id] then
+		_buffers[id] = {
+			number = id,
+			last_count = 0,
+		}
+	end
+	return _buffers[id]
+end
 
 local scope_hl_map = {
 	{ "type", "StorageClass" },
@@ -47,18 +57,18 @@ local scope_hl_map = {
 }
 
 function txmt_highlight_line(n, l)
-	local b = vim.buffer().number
+	local b = buffers(vim.buffer().number)
 
-	local langid = buffers[b]
+	local langid = b.langid
 	if not langid then
 		langid = module.highlight_load_language(vim.fn.expand("%"))
-		buffers[b] = langid
+		b.langid = langid
 	end
 
 	-- local r = vim.window().line;
 	-- local c = vim.window().column;
 
-	local t = module.highlight_line(l, n, langid, b)
+	local t = module.highlight_line(l, n, langid, b.number)
 
 	vim.command("call prop_clear(" .. n .. ")")
 
@@ -109,13 +119,17 @@ function txmt_highlight_current_line()
 end
 
 function txmt_highlight_current_buffer()
-	local b = vim.buffer().number
+	vim.command("syn off")
+
+	local b = buffers(vim.buffer().number)
 
 	local r = vim.window().line
 	local c = vim.window().column
 
 	local lc = #vim.buffer()
-	local sr = 50 -- screen rows
+	local sr = vim.window().height -- screen rows
+
+	b.last_count = lc
 
 	local ls = r - sr
 	local le = r + sr
@@ -128,16 +142,45 @@ function txmt_highlight_current_buffer()
 	end
 
 	for i = ls, le - 1, 1 do
-		if module.highlight_is_line_dirty(i + 1, b) ~= 0 then
+		if module.highlight_is_line_dirty(i + 1, b.number) ~= 0 then
 			local line = vim.buffer()[i + 1]
 			txmt_highlight_line(i + 1, line)
 		end
 	end
 end
 
+function txmt_on_text_changed()
+	local b = buffers(vim.buffer().number)
+	local lc = b.last_count
+	local count = #vim.buffer()
+	local changed_lines = 1
+
+	local nr = vim.window().line - 1
+
+	local diff = count - lc
+	if diff > 0 then
+		changed_lines = diff
+		for nr = 0, diff, 1 do
+			module.highlight_add_block(nr, b.number)
+		end
+	end
+	if diff < 0 then
+		changed_lines = -diff
+		for nr = 0, -diff, 1 do
+			module.highlight_remove_block(nr, b.number)
+		end
+	end
+
+	for cl = 0, changed_lines, 1 do
+		module.highlight_make_line_dirty(nr + cl, b.number)
+	end
+
+	txmt_highlight_current_buffer()
+end
+
 vim.command("syn on")
 vim.command("au CursorMoved,CursorMovedI * :lua txmt_highlight_current_buffer()")
-vim.command("au TextChanged,TextChangedI * :lua txmt_highlight_current_buffer()")
+vim.command("au TextChanged,TextChangedI * :lua txmt_on_text_changed()")
 vim.command("au BufEnter * :lua txmt_highlight_current_buffer()")
 
 -- vim.command"au BufEnter * :luado txmt_highlight_line(linenr, line)"
