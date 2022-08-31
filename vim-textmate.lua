@@ -8,6 +8,7 @@ local module = require("textmate")
 module.highlight_set_extensions_dir(vim.fn.expand("~/.editor/extensions/"))
 module.highlight_load_theme("Monokai")
 
+local debug_scopes = false
 local props = {}
 local _buffers = {}
 
@@ -65,8 +66,12 @@ function txmt_highlight_line(n, l)
 		b.langid = langid
 	end
 
-	-- local r = vim.window().line;
-	-- local c = vim.window().column;
+	if langid == -1 then
+		return
+	end
+
+	local r = vim.window().line
+	local c = vim.window().column
 
 	local t = module.highlight_line(l, n, langid, b.number)
 
@@ -80,9 +85,9 @@ function txmt_highlight_line(n, l)
 		-- local bb = style[5]
 		local scope = style[6]
 
-		-- if r == n and (c - 1) >= start and (c - 1) < start + length then
-		--     print(scope)
-		-- end
+		if debug_scopes and r == n and (c - 1) >= start and (c - 1) < start + length then
+			print(scope)
+		end
 
 		-- local clr = string.format("%02x%02x%02x", rr, gg, bb)
 		-- if clr and clr:len() < 8 then
@@ -96,7 +101,7 @@ function txmt_highlight_line(n, l)
 		end
 		if hl then
 			if not props[hl] then
-				vim.command("call prop_type_add('" .. hl .. "', { 'highlight': '" .. hl .. "' })")
+				vim.command("call prop_type_add('" .. hl .. "', { 'highlight': '" .. hl .. "', 'priority': 999 })")
 				props[hl] = true
 			end
 			vim.command(
@@ -119,8 +124,6 @@ function txmt_highlight_current_line()
 end
 
 function txmt_highlight_current_buffer()
-	vim.command("syn off")
-
 	local b = buffers(vim.buffer().number)
 
 	local r = vim.window().line
@@ -178,10 +181,41 @@ function txmt_on_text_changed()
 	txmt_highlight_current_buffer()
 end
 
+function txmt_on_delete_buffer()
+	local n = vim.buffer().number
+	if _buffers[n] then
+		_buffers[n] = nil
+		module.highlight_remove_doc(n)
+	end
+end
+
 vim.command("syn on")
 vim.command("au CursorMoved,CursorMovedI * :lua txmt_highlight_current_buffer()")
 vim.command("au TextChanged,TextChangedI * :lua txmt_on_text_changed()")
 vim.command("au BufEnter * :lua txmt_highlight_current_buffer()")
+vim.command("au BufDelete * :lua txmt_on_delete_buffer()")
+
+function txmt_info()
+	-- local b = buffers(vim.buffer().number)
+	-- if b then
+	--     print(b)
+	-- end
+	local languages = module.highlight_languages()
+	for i, lang in ipairs(languages) do
+		print(lang[1])
+	end
+end
+
+function txmt_debug_scopes()
+	if debug_scopes then
+		debug_scopes = false
+	else
+		debug_scopes = true
+	end
+end
+
+vim.command("command TxmtInfo 0 % :lua txmt_info()")
+vim.command("command TxmtDebugScopes 0 % :lua txmt_debug_scopes()")
 
 -- vim.command"au BufEnter * :luado txmt_highlight_line(linenr, line)"
 -- vim.command"luado txmt_highlight_line(linenr, line)"
