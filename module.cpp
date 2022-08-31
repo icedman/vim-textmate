@@ -191,7 +191,8 @@ int highlight_add_block(lua_State *L) {
   int docid = lua_tonumber(L, -1);
 
   linenr -= 1;
-  if (linenr < 0) return 1;
+  if (linenr < 0)
+    return 1;
 
   if (docs.find(docid) == docs.end()) {
     return 1;
@@ -207,7 +208,8 @@ int highlight_remove_block(lua_State *L) {
   int docid = lua_tonumber(L, -1);
 
   linenr -= 1;
-  if (linenr < 0) return 1;
+  if (linenr < 0)
+    return 1;
 
   if (docs.find(docid) == docs.end()) {
     return 1;
@@ -257,6 +259,19 @@ int highlight_languages(lua_State *L) {
     lua_rawseti(L, -2, row++);
   }
 
+  return 1;
+}
+
+int highlight_language_info(lua_State *L) {
+  int id = lua_tonumber(L, -1);
+  lua_newtable(L);
+
+  language_info_ptr lang = Textmate::language();
+  int col = 1;
+  lua_pushstring(L, lang->definition["name"].asString().c_str());
+  lua_rawseti(L, -2, col++);
+  lua_pushstring(L, lang->definition["path"].asString().c_str());
+  lua_rawseti(L, -2, col++);
   return 1;
 }
 
@@ -331,7 +346,7 @@ int highlight_theme_info(lua_State *L) {
 }
 
 EXPORT int luaopen_textmate(lua_State *L) {
-  // Textmate::load_theme_data(THEME_MONOKAI);
+  Textmate::load_theme_data(THEME_MONOKAI);
   // Textmate::load_language_data(GRAMMAR_CPP);
 
   lua_newtable(L);
@@ -366,5 +381,8 @@ EXPORT int luaopen_textmate(lua_State *L) {
 
   lua_pushcfunction(L, highlight_languages);
   lua_setfield(L, -2, "highlight_languages");
+
+  lua_pushcfunction(L, highlight_language_info);
+  lua_setfield(L, -2, "highlight_language_info");
   return 1;
 }

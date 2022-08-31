@@ -13,7 +13,7 @@ build:
 
 install:
 	mkdir -p ~/.vim/lua/vim-textmate
-	cp -R ./textmate.so ~/.vim/lua/
+	cp -R ./textmate.so ~/.vim/lua/vim-textmate
 	cp -R ./vim-textmate.lua ~/.vim/lua/vim-textmate
 
 uninstall:

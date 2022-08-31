@@ -1,16 +1,15 @@
-function script_path()
-	local str = debug.getinfo(2, "S").source:sub(2)
-	return str:match("(.*/)")
-end
-
+local cpath = package.cpath
+package.cpath = cpath .. ";" .. vim.fn.expand("~/.vim/lua/vim-textmate/?.so")
 local module = require("textmate")
+package.cpath = cpath
 
 module.highlight_set_extensions_dir(vim.fn.expand("~/.editor/extensions/"))
-module.highlight_load_theme("Monokai")
 
 local debug_scopes = false
 local props = {}
 local _buffers = {}
+
+local function setup(parameters) end
 
 local function buffers(id)
 	if not _buffers[id] then
@@ -150,6 +149,10 @@ function txmt_highlight_current_buffer()
 			txmt_highlight_line(i + 1, line)
 		end
 	end
+
+	if debug_scopes then
+		txmt_highlight_current_line()
+	end
 end
 
 function txmt_on_text_changed()
@@ -196,14 +199,22 @@ vim.command("au BufEnter * :lua txmt_highlight_current_buffer()")
 vim.command("au BufDelete * :lua txmt_on_delete_buffer()")
 
 function txmt_info()
-	-- local b = buffers(vim.buffer().number)
-	-- if b then
-	--     print(b)
-	-- end
+	local b = buffers(vim.buffer().number)
+	print("file: " .. vim.fn.expand("%"))
+	if b.langid and b.langid ~= -1 then
+		local info = module.highlight_language_info(b.langid)
+		print("language: " .. info[1] .. "\ngrammar: " .. info[2])
+	end
+end
+
+function txmt_info_languages()
+	local s = {}
 	local languages = module.highlight_languages()
 	for i, lang in ipairs(languages) do
-		print(lang[1])
+		table.insert(s, lang[1])
 	end
+	print("languages available:\n")
+	print(table.concat(s, ", "))
 end
 
 function txmt_debug_scopes()
@@ -215,7 +226,12 @@ function txmt_debug_scopes()
 end
 
 vim.command("command TxmtInfo 0 % :lua txmt_info()")
+vim.command("command TxmtInfoLanguages 0 % :lua txmt_info_languages()")
 vim.command("command TxmtDebugScopes 0 % :lua txmt_debug_scopes()")
 
 -- vim.command"au BufEnter * :luado txmt_highlight_line(linenr, line)"
 -- vim.command"luado txmt_highlight_line(linenr, line)"
+
+return {
+	setup = setup,
+}
