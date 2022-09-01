@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.7)
 project(textmate LANGUAGES CXX C)
 
 string(APPEND CMAKE_CXX_FLAGS " -std=gnu++11")
@@ -76,8 +76,6 @@ target_include_directories(onigmolib
 )
 
 find_package(Lua REQUIRED)
-set(LUA_PREFERRED_INCLUDE_DIRS ${LUAINCLUDE_DIRS})
-set(LUA_PREFERRED_LIBRARIES ${LUALIBRARIES})
 
 add_library(textmate
   SHARED 
@@ -99,7 +97,6 @@ add_library(textmate
   ./libs/tm-parser/textmate/extensions/extension.cpp
   ./libs/tm-parser/textmate/resources/themes.cpp
   ./libs/tm-parser/textmate/resources/grammars.cpp
-  ${LUA_PREFERRED_INCLUDE_DIRS}
 )
 
 target_include_directories(textmate 
@@ -115,9 +112,10 @@ target_include_directories(textmate
   ./libs/tm-parser/textmate/theme
   ./libs/tm-parser/textmate/extensions
   ./libs/tm-parser/textmate/resources
+  ${LUA_INCLUDE_DIR}
 )
 
 set_target_properties(textmate PROPERTIES PREFIX "")
 # set_target_properties(textmate PROPERTIES OUTPUT_NAME "textmate")
 
-target_link_libraries(textmate ${LUA_PREFERRED_LIBRARIES} onigmolib)
+target_link_libraries(textmate ${LUALIBRARIES} onigmolib)

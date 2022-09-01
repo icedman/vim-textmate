@@ -414,7 +414,7 @@ language_from_file(const std::string path,
                 log("extension: %s", resolvedExtension.path.c_str());
 
                 std::string grammar_path = path;
-                lang->grammar = parse::parse_grammar(load_plist_or_json(grammar_path));
+                lang->grammar = parse::parse_grammar(load_plist_or_json(path));
                 lang->id = resolvedLanguage;
 
                 // language configuration
