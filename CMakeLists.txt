@@ -81,7 +81,7 @@ add_library(textmate
   SHARED 
   module.cpp
   ./libs/tinyxml2/tinyxml2.cpp
-  ./libs/jsoncpp/dist/jsoncpp.cpp
+  ./libs/jsoncpp/jsoncpp.cpp
   ./libs/tm-parser/textmate/textmate.cpp
   ./libs/tm-parser/textmate/parser/grammar.cpp
   ./libs/tm-parser/textmate/parser/parser.cpp
@@ -105,7 +105,7 @@ target_include_directories(textmate
   ./libs/Onigmo/enc
   ./libs/Onigmo/enc/unicode
   ./libs/tinyxml2
-  ./libs/jsoncpp/dist
+  ./libs/jsoncpp
   ./libs/tm-parser/textmate/
   ./libs/tm-parser/textmate/parser
   ./libs/tm-parser/textmate/scopes
