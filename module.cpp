@@ -148,6 +148,8 @@ int highlight_line(lua_State *L) {
     lua_rawseti(L, -2, col++);
     lua_pushnumber(L, r.fg.b);
     lua_rawseti(L, -2, col++);
+    lua_pushnumber(L, r.fg.a);
+    lua_rawseti(L, -2, col++);
     lua_pushstring(L, r.scope.c_str());
     lua_rawseti(L, -2, col++);
 

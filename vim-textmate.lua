@@ -87,7 +87,7 @@ function txmt_highlight_line(n, l)
   for i, style in ipairs(t) do
     local start = math.floor(style[1])
     local length = math.floor(style[2])
-    local scope = style[6]
+    local scope = style[7]
 
     if debug_scopes and r == n and (c - 1) >= start and (c - 1) < start + length then
       print(scope)
@@ -100,12 +100,15 @@ function txmt_highlight_line(n, l)
       local rr = style[3]
       local gg = style[4]
       local bb = style[5]
-      local clr = string.format("%02x%02x%02x", rr, gg, bb)
-      if clr and clr:len() < 8 then
-        if not props[clr] then
-          vim.command("highlight " .. clr .. " guifg=#" .. clr)
+      local aa = style[6] -- nearest color index
+      if rr > 0 then
+        local clr = string.format("%02x%02x%02x", rr, gg, bb)
+        if clr and clr:len() < 8 then
+          if not props[clr] then
+            vim.command("highlight " .. clr .. " ctermfg=" .. math.floor(aa) .. " guifg=#" .. clr)
+          end
+          hl = clr
         end
-        hl = clr
       end
     end
 
@@ -120,7 +123,7 @@ function txmt_highlight_line(n, l)
 
     if hl then
       if not props[hl] then
-        vim.command("call prop_type_add('" .. hl .. "', { 'highlight': '" .. hl .. "', 'priority': 999 })")
+        vim.command("call prop_type_add('" .. hl .. "', { 'highlight': '" .. hl .. "', 'priority': 0 })")
         props[hl] = true
       end
       vim.command(
