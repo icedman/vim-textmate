@@ -46,6 +46,19 @@ int highlight_is_line_dirty(lua_State *L) {
   return 1;
 }
 
+int highlight_make_doc_dirty(lua_State *L) {
+  int docid = lua_tonumber(L, -1);
+  if (docs.find(docid) == docs.end()) {
+    return 1;
+  }
+
+  // log("dirty %d", docid);
+  
+  doc_data_ptr doc = docs[docid];
+  doc->make_dirty();
+  return 1;
+}
+
 int highlight_make_line_dirty(lua_State *L) {
   int linenr = lua_tonumber(L, -2);
   int docid = lua_tonumber(L, -1);
@@ -108,7 +121,7 @@ int highlight_line(lua_State *L) {
   block_data_ptr next_block = doc->next_block(block_line);
 
   std::vector<span_info_t> spans;
-  res = Textmate::run_highlighter((char *)code.c_str(), Textmate::language(),
+  res = Textmate::run_highlighter((char *)code.c_str(), Textmate::language_info(langid),
                                   Textmate::theme(), block ? block.get() : NULL,
                                   prev_block ? prev_block.get() : NULL,
                                   next_block ? next_block.get() : NULL, &spans);
@@ -365,6 +378,8 @@ EXPORT int luaopen_textmate(lua_State *L) {
   lua_setfield(L, -2, "highlight_is_line_dirty");
   lua_pushcfunction(L, highlight_make_line_dirty);
   lua_setfield(L, -2, "highlight_make_line_dirty");
+  lua_pushcfunction(L, highlight_make_doc_dirty);
+  lua_setfield(L, -2, "highlight_make_doc_dirty");
 
   lua_pushcfunction(L, highlight_remove_doc);
   lua_setfield(L, -2, "highlight_remove_doc");

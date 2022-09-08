@@ -22,3 +22,6 @@ uninstall:
 clean:
 	rm -rf build
 
+
+format:
+	stylua --quote-style=AutoPreferDouble --indent-type=Spaces --indent-width=2 ./vim-textmate.lua
