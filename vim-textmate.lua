@@ -4,8 +4,11 @@ local module = require("textmate")
 package.cpath = cpath
 
 module.highlight_set_extensions_dir(vim.fn.expand("~/.editor/extensions/"))
+module.highlight_set_extensions_dir(vim.fn.expand("~/.vim/lua/vim-textmate/extensions/"))
 
 local debug_scopes = false
+local enable_highlighting = true
+local enable_textmate_color_fidelity = false
 local props = {}
 local _buffers = {}
 
@@ -57,6 +60,11 @@ local scope_hl_map = {
 }
 
 function txmt_highlight_line(n, l)
+	vim.command("call prop_clear(" .. n .. ")")
+	if not enable_highlighting then
+		return
+	end
+
 	local b = buffers(vim.buffer().number)
 
 	local langid = b.langid
@@ -74,30 +82,40 @@ function txmt_highlight_line(n, l)
 
 	local t = module.highlight_line(l, n, langid, b.number)
 
-	vim.command("call prop_clear(" .. n .. ")")
-
 	for i, style in ipairs(t) do
 		local start = math.floor(style[1])
 		local length = math.floor(style[2])
-		-- local rr = style[3]
-		-- local gg = style[4]
-		-- local bb = style[5]
 		local scope = style[6]
 
 		if debug_scopes and r == n and (c - 1) >= start and (c - 1) < start + length then
 			print(scope)
 		end
 
-		-- local clr = string.format("%02x%02x%02x", rr, gg, bb)
-		-- if clr and clr:len() < 8 then
-		-- end
-
 		local hl = nil
-		for j, map in ipairs(scope_hl_map) do
-			if string.find(scope, map[1]) then
-				hl = map[2]
+
+		-- render with colors
+		if enable_textmate_color_fidelity then
+			local rr = style[3]
+			local gg = style[4]
+			local bb = style[5]
+			local clr = string.format("%02x%02x%02x", rr, gg, bb)
+			if clr and clr:len() < 8 then
+				if not props[clr] then
+					vim.command("highlight " .. clr .. " guifg=#" .. clr)
+				end
+				hl = clr
 			end
 		end
+
+		-- render with color schemes
+		if not enable_textmate_color_fidelity then
+			for j, map in ipairs(scope_hl_map) do
+				if string.find(scope, map[1]) then
+					hl = map[2]
+				end
+			end
+		end
+
 		if hl then
 			if not props[hl] then
 				vim.command("call prop_type_add('" .. hl .. "', { 'highlight': '" .. hl .. "', 'priority': 999 })")
@@ -122,7 +140,7 @@ function txmt_highlight_current_line()
 	txmt_highlight_line(vim.window().line, vim.buffer()[vim.window().line])
 end
 
-function txmt_highlight_current_buffer()
+function txmt_highlight_current_buffer(no_limit)
 	local b = buffers(vim.buffer().number)
 
 	local r = vim.window().line
@@ -136,17 +154,22 @@ function txmt_highlight_current_buffer()
 	local ls = r - sr
 	local le = r + sr
 
-	if ls < 0 then
-		ls = 0
+	if ls < 1 then
+		ls = 1
 	end
 	if le > lc then
 		le = lc
 	end
 
+	local dirty_count = 0
 	for i = ls, le - 1, 1 do
-		if module.highlight_is_line_dirty(i + 1, b.number) ~= 0 then
-			local line = vim.buffer()[i + 1]
-			txmt_highlight_line(i + 1, line)
+		if module.highlight_is_line_dirty(i, b.number) ~= 0 then
+			local line = vim.buffer()[i]
+			txmt_highlight_line(i, line)
+			dirty_count = dirty_count + 1
+			if no_limit ~= true and dirty_count > (sr * 1.4) then
+				break
+			end
 		end
 	end
 
@@ -181,7 +204,7 @@ function txmt_on_text_changed()
 		module.highlight_make_line_dirty(nr + cl, b.number)
 	end
 
-	txmt_highlight_current_buffer()
+	txmt_highlight_current_buffer(true)
 end
 
 function txmt_on_delete_buffer()
@@ -191,12 +214,6 @@ function txmt_on_delete_buffer()
 		module.highlight_remove_doc(n)
 	end
 end
-
-vim.command("syn on")
-vim.command("au CursorMoved,CursorMovedI * :lua txmt_highlight_current_buffer()")
-vim.command("au TextChanged,TextChangedI * :lua txmt_on_text_changed()")
-vim.command("au BufEnter * :lua txmt_highlight_current_buffer()")
-vim.command("au BufDelete * :lua txmt_on_delete_buffer()")
 
 function txmt_info()
 	local b = buffers(vim.buffer().number)
@@ -217,6 +234,26 @@ function txmt_info_languages()
 	print(table.concat(s, ", "))
 end
 
+function txmt_info_themes()
+	local s = {}
+	local themes = module.highlight_themes()
+	for i, thm in ipairs(themes) do
+		table.insert(s, thm[1])
+	end
+	print("themes available:\n")
+	print(table.concat(s, ", "))
+end
+
+function txmt_set_theme(thm)
+	if string.len(thm) > 1 and string.sub(thm, 1, 1) == '"' then
+		thm = string.sub(thm, 2, string.len(thm) - 1)
+	end
+	module.highlight_load_theme(thm)
+
+	enable_textmate_color_fidelity = true
+	txmt_highlight_current_buffer(true)
+end
+
 function txmt_debug_scopes()
 	if debug_scopes then
 		debug_scopes = false
@@ -225,12 +262,34 @@ function txmt_debug_scopes()
 	end
 end
 
+function txmt_enable_color_fidelity()
+	if enable_textmate_color_fidelity then
+		enable_textmate_color_fidelity = false
+	else
+		enable_textmate_color_fidelity = true
+	end
+end
+
+function txmt_enable(args)
+	enable_highlighting = args
+	txmt_on_delete_buffer()
+	txmt_highlight_current_buffer(true)
+end
+
+vim.command("syn on")
+vim.command("au CursorMoved,CursorMovedI * :lua txmt_highlight_current_buffer()")
+vim.command("au CursorHold,CursorHoldI * :lua txmt_highlight_current_buffer()")
+vim.command("au TextChanged,TextChangedI * :lua txmt_on_text_changed()")
+vim.command("au BufEnter * :lua txmt_highlight_current_buffer(true)")
+vim.command("au BufDelete * :lua txmt_on_delete_buffer()")
+
 vim.command("command TxmtInfo 0 % :lua txmt_info()")
 vim.command("command TxmtInfoLanguages 0 % :lua txmt_info_languages()")
+vim.command("command TxmtInfoThemes 0 % :lua txmt_info_themes()")
+vim.command("command TxmtSetTheme 1 % :lua txmt_set_theme(<q-args>)")
 vim.command("command TxmtDebugScopes 0 % :lua txmt_debug_scopes()")
-
--- vim.command"au BufEnter * :luado txmt_highlight_line(linenr, line)"
--- vim.command"luado txmt_highlight_line(linenr, line)"
+vim.command("command TxmtEnable 0 % :lua txmt_enable(true)")
+vim.command("command TxmtDisable 0 % :lua txmt_enable(false)")
 
 return {
 	setup = setup,

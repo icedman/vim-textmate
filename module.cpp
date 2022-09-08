@@ -16,7 +16,7 @@ static std::map<int, doc_data_ptr> docs;
 static bool has_running_threads = false;
 
 /* paramaters
- * nvim.lua buffer lines are 1-based
+ * vim.lua buffer lines are 1-based
  * every reference to a buffer line number passed to these function must be
  * 1-based textmate parser lines are 0-based ... subtract here..
  */
@@ -33,7 +33,6 @@ int highlight_is_line_dirty(lua_State *L) {
 
   doc_data_ptr doc = docs[docid];
   block_data_ptr block = doc->block_at(block_line);
-  // block_data_ptr prev = doc->previous_block(block_line);
 
   lua_pushnumber(L, (!block || block->dirty) ? 1 : 0);
 
@@ -66,7 +65,8 @@ int highlight_make_line_dirty(lua_State *L) {
   return 1;
 }
 
-// check and add at every highlight call
+// check and add doc at every highlight call
+// doc caches parser states per line
 // int highlight_line_add_doc(lua_State *L)
 // {
 //   int docid = lua_tonumber(L, -1);
@@ -95,12 +95,7 @@ int highlight_line(lua_State *L) {
 
   if (docs.find(docid) == docs.end()) {
     docs[docid] = std::make_shared<doc_data_t>();
-    // docs[docid] = doc;
   }
-
-  // log(">>%d %d %d", linenr, langid, docid);
-  // lua_newtable(L);
-  // return 1;
 
   doc = docs[docid];
 
@@ -121,6 +116,10 @@ int highlight_line(lua_State *L) {
   // log("highlight_line %d", block_line);
 
   lua_newtable(L);
+
+  /* return an array of textspans with infos
+   * range, color, scope
+   */
 
   int row = 1;
   for (auto r : spans) {
