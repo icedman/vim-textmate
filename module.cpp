@@ -138,10 +138,16 @@ int highlight_line(lua_State *L) {
   for (auto r : spans) {
     int col = 1;
     lua_newtable(L);
+
+    // range and scope
     lua_pushnumber(L, r.start);
     lua_rawseti(L, -2, col++);
     lua_pushnumber(L, r.length);
     lua_rawseti(L, -2, col++);
+    lua_pushstring(L, r.scope.c_str());
+    lua_rawseti(L, -2, col++);
+
+    // color
     lua_pushnumber(L, r.fg.r);
     lua_rawseti(L, -2, col++);
     lua_pushnumber(L, r.fg.g);
@@ -150,9 +156,15 @@ int highlight_line(lua_State *L) {
     lua_rawseti(L, -2, col++);
     lua_pushnumber(L, r.fg.a);
     lua_rawseti(L, -2, col++);
-    lua_pushstring(L, r.scope.c_str());
-    lua_rawseti(L, -2, col++);
 
+    // more styles
+    lua_pushnumber(L, r.bold);
+    lua_rawseti(L, -2, col++);
+    lua_pushnumber(L, r.italic);
+    lua_rawseti(L, -2, col++);
+    lua_pushnumber(L, r.underline);
+    lua_rawseti(L, -2, col++);
+    
     lua_rawseti(L, -2, row++);
   }
 
@@ -400,5 +412,8 @@ EXPORT int luaopen_textmate(lua_State *L) {
 
   lua_pushcfunction(L, highlight_language_info);
   lua_setfield(L, -2, "highlight_language_info");
+
+  lua_pushstring(L, TXMT_VERSION);
+  lua_setfield(L, -2, "highlight_module_version");
   return 1;
 }

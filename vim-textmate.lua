@@ -3,6 +3,8 @@ package.cpath = cpath .. ";" .. vim.fn.expand("~/.vim/lua/vim-textmate/?.so")
 local module = require("textmate")
 package.cpath = cpath
 
+local script_version = "0.1"
+
 module.highlight_set_extensions_dir(vim.fn.expand("~/.editor/extensions/"))
 module.highlight_set_extensions_dir(vim.fn.expand("~/.vim/lua/vim-textmate/extensions/"))
 
@@ -87,7 +89,7 @@ function txmt_highlight_line(n, l)
   for i, style in ipairs(t) do
     local start = math.floor(style[1])
     local length = math.floor(style[2])
-    local scope = style[7]
+    local scope = style[3]
 
     if debug_scopes and r == n and (c - 1) >= start and (c - 1) < start + length then
       print(scope)
@@ -97,17 +99,41 @@ function txmt_highlight_line(n, l)
 
     -- render with colors
     if enable_textmate_color_fidelity then
-      local rr = style[3]
-      local gg = style[4]
-      local bb = style[5]
-      local aa = style[6] -- nearest color index
+      local rr = style[4] -- rgb color
+      local gg = style[5]
+      local bb = style[6]
+      local aa = style[7] -- nearest color index
+      local bold = style[8]
+      local italic = style[9]
+      local underline = style[10]
+      local attribs = ""
+      local term = {}
+      local terms =  ""
       if rr > 0 then
+
+        if bold == 1 then
+          table.insert(term, "bold")
+          attribs = attribs .. "b"
+        end
+        if italic == 1 then
+          table.insert(term, "italic")
+          attribs = attribs .. "i"
+        end
+        -- if underline == 1 then
+        --   table.insert(term, "underline")
+        --   attribs = attribs .. "u"
+        -- end
+
+        if #term > 0 then
+          terms = " cterm=" .. table.concat(term, ",")
+        end
+
         local clr = string.format("%02x%02x%02x", rr, gg, bb)
         if clr and clr:len() < 8 then
-          if not props[clr] then
-            vim.command("highlight " .. clr .. " ctermfg=" .. math.floor(aa) .. " guifg=#" .. clr)
+          hl = clr .. attribs
+          if not props[hl] then
+            vim.command("highlight " .. hl .. terms .. " ctermfg=" .. math.floor(aa) .. " guifg=#" .. clr)
           end
-          hl = clr
         end
       end
     end
@@ -218,6 +244,13 @@ end
 
 function txmt_info()
   local b = buffers(vim.buffer().number)
+  if script_version == module.highlight_module_version then
+    print("version: " .. script_version)
+  else
+    print("warning script & module versions do not match")
+    print("script version: " .. script_version)
+    print("module version: " .. module.highlight_module_version)
+  end
   print("file: " .. vim.fn.expand("%"))
   if b.langid and b.langid ~= -1 then
     local info = module.highlight_language_info(b.langid)
@@ -254,7 +287,7 @@ function txmt_set_theme(thm)
   enable_textmate_color_fidelity = true
 
   vim.command("syn off")
-  txmt_highlight_current_buffer(true)
+  txmt_highlight_current_buffer(true, true)
 end
 
 function txmt_debug_scopes()

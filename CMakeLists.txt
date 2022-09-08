@@ -5,7 +5,10 @@ string(APPEND CMAKE_CXX_FLAGS " -std=gnu++11")
 set (CMAKE_CXX_STANDARD 11)
 
 add_definitions(-fPIC)
+add_definitions(-DTXMT_VERSION="0.1")
+if (DEFINED ENV{ENABLE_LOG})
 add_definitions(-DENABLE_LOG=1)
+endif()
 # add_definitions(-DDISABLE_ADD_GRAMMAR_THREADS=1)
 
 add_library(onigmolib
