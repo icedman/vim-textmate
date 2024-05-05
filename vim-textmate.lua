@@ -6,11 +6,12 @@ package.cpath = cpath
 local script_version = "0.1"
 
 module.highlight_set_extensions_dir(vim.fn.expand("~/.editor/extensions/"))
+module.highlight_set_extensions_dir(vim.fn.expand("~/.vscode/extensions/"))
 module.highlight_set_extensions_dir(vim.fn.expand("~/.vim/lua/vim-textmate/extensions/"))
 
 local debug_scopes = false
 local enable_highlighting = true
-local enable_textmate_color_fidelity = false
+local enable_textmate_color_fidelity = true
 local props = {}
 local _buffers = {}
 
@@ -286,7 +287,7 @@ function txmt_set_theme(thm)
 
   enable_textmate_color_fidelity = true
 
-  vim.command("syn off")
+  --vim.command("syn off")
   txmt_highlight_current_buffer(true, true)
 end
 
