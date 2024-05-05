@@ -7,7 +7,7 @@ prebuild:
 
 build:
 	mkdir -p build
-	cd build && cmake ../ && make
+	cd build && cmake ../cmake && make
 	cp build/textmate.so ./
 
 install:
@@ -21,7 +21,6 @@ uninstall:
 
 clean:
 	rm -rf build
-
 
 format:
 	stylua --quote-style=AutoPreferDouble --indent-type=Spaces --indent-width=2 ./vim-textmate.lua

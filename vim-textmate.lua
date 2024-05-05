@@ -16,9 +16,13 @@ end
 package.cpath = cpath .. ";" .. module_path .. "?.so"
 local ok, module = pcall(require, "textmate")
 
+print(module_path)
+
 if not ok then
   local target_path = module_path
-  print("Compiling textmate module...")
+  print("Configuring textmate module...\n")
+  os.execute("make prebuild -C " .. target_path)
+  print("Compiling textmate module...\n")
   os.execute("make build -C " .. target_path)
   ok, module = pcall(require, "textmate")
   if not ok then
