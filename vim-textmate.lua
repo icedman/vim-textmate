@@ -1,16 +1,31 @@
 local cpath = package.cpath
 local module_path = vim.fn.expand("~/.vim/lua/vim-textmate/")
 
-if not vim.fn.isdirectory(module_path) then
+function exists(file)
+   local ok, err, code = os.rename(file, file)
+   if not ok then
+      if code == 13 then
+         -- Permission denied, but it exists
+         return true
+      end
+   end
+   return ok, err
+end
+
+function isdir(path)
+   return exists(path.."/")
+end
+
+if not isdir(module_path) then
   module_path = vim.fn.expand("~/.vim/bundle/vim-textmate/")
 end
 
-if not vim.fn.isdirectory(module_path) then
+if not isdir(module_path) then
   module_path = vim.fn.expand("~/.vim/dein/vim-textmate/")
 end
 
-if not vim.fn.isdirectory(module_path) then
-  module_path = vim.fn.expand("~/.vim/plugin/vim-textmate/")
+if not isdir(module_path) then
+  module_path = vim.fn.expand("~/.vim/plugged/vim-textmate/")
 end
 
 package.cpath = cpath .. ";" .. module_path .. "?.so"
@@ -34,11 +49,9 @@ package.cpath = cpath
 
 local script_version = "0.1"
 
-module.highlight_set_extensions_dir(vim.fn.expand("~/.editor/extensions/"))
+module.highlight_set_extensions_dir(vim.fn.expand(module_path .. "/extensions"))
 module.highlight_set_extensions_dir(vim.fn.expand("~/.vscode/extensions/"))
-module.highlight_set_extensions_dir(vim.fn.expand("~/.vim/lua/vim-textmate/extensions/"))
-module.highlight_set_extensions_dir(vim.fn.expand("~/.vim/plugged/vim-textmate/extensions/"))
-module.highlight_set_extensions_dir(vim.fn.expand("~/.vim/bundle/vim-textmate/extensions/"))
+module.highlight_set_extensions_dir(vim.fn.expand("~/.editor/extensions/"))
 
 local debug_scopes = false
 local enable_highlighting = true
