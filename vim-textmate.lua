@@ -1,6 +1,15 @@
 local cpath = package.cpath
-package.cpath = cpath .. ";" .. vim.fn.expand("~/.vim/lua/vim-textmate/?.so")
-local module = require("textmate")
+
+package.cpath = cpath .. ";" .. vim.fn.expand("~/.vim/lua/vim-textmate/?.so") 
+local ok, module = pcall(require, "textmate")
+
+if not ok then
+  local target_path = vim.fn.expand("~/.vim/plugged/vim-textmate/")
+  print("Compiling textmate module...")
+  os.execute("make -C " .. target_path)
+  module = require("textmate")
+end
+
 package.cpath = cpath
 
 local script_version = "0.1"
