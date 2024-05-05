@@ -1,13 +1,29 @@
 local cpath = package.cpath
+local module_path = vim.fn.expand("~/.vim/lua/vim-textmate/")
 
-package.cpath = cpath .. ";" .. vim.fn.expand("~/.vim/lua/vim-textmate/?.so") 
+if not vim.fn.isdirectory(module_path) then
+  module_path = vim.fn.expand("~/.vim/bundle/vim-textmate/")
+end
+
+if not vim.fn.isdirectory(module_path) then
+  module_path = vim.fn.expand("~/.vim/dein/vim-textmate/")
+end
+
+if not vim.fn.isdirectory(module_path) then
+  module_path = vim.fn.expand("~/.vim/plugin/vim-textmate/")
+end
+
+package.cpath = cpath .. ";" .. module_path .. "?.so"
 local ok, module = pcall(require, "textmate")
 
 if not ok then
-  local target_path = vim.fn.expand("~/.vim/plugged/vim-textmate/")
+  local target_path = module_path
   print("Compiling textmate module...")
-  os.execute("make -C " .. target_path)
-  module = require("textmate")
+  os.execute("make build -C " .. target_path)
+  ok, module = pcall(require, "textmate")
+  if not ok then
+    print("error compiling vim-textmate")
+  end
 end
 
 package.cpath = cpath
@@ -17,6 +33,8 @@ local script_version = "0.1"
 module.highlight_set_extensions_dir(vim.fn.expand("~/.editor/extensions/"))
 module.highlight_set_extensions_dir(vim.fn.expand("~/.vscode/extensions/"))
 module.highlight_set_extensions_dir(vim.fn.expand("~/.vim/lua/vim-textmate/extensions/"))
+module.highlight_set_extensions_dir(vim.fn.expand("~/.vim/plugged/vim-textmate/extensions/"))
+module.highlight_set_extensions_dir(vim.fn.expand("~/.vim/bundle/vim-textmate/extensions/"))
 
 local debug_scopes = false
 local enable_highlighting = true
@@ -118,9 +136,8 @@ function txmt_highlight_line(n, l)
       local underline = style[10]
       local attribs = ""
       local term = {}
-      local terms =  ""
+      local terms = ""
       if rr > 0 then
-
         if bold == 1 then
           table.insert(term, "bold")
           attribs = attribs .. "b"
