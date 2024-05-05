@@ -85,6 +85,9 @@ typedef enum {
 } state_t;
 #define A ACCEPT
 #define F FAILURE
+#if 0
+static const signed char trans[][0x1] = {};
+#else
 static const signed char trans[][0x100] = {
   { /* S0   0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f */
     /* 0 */ A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A,
@@ -311,6 +314,7 @@ static const signed char trans[][0x100] = {
 };
 #undef A
 #undef F
+#endif
 
 static int
 mbc_enc_len(const UChar* p, const UChar* e, OnigEncoding enc ARG_UNUSED)
