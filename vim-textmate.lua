@@ -30,8 +30,6 @@ end
 package.cpath = cpath .. ";" .. module_path .. "?.so"
 local ok, module = pcall(require, "textmate")
 
-print(module_path)
-
 if not ok then
   local target_path = module_path
   print("Configuring textmate module...\n")
