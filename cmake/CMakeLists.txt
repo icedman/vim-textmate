@@ -4,6 +4,9 @@ project(textmate LANGUAGES CXX C)
 string(APPEND CMAKE_CXX_FLAGS " -std=gnu++11")
 set (CMAKE_CXX_STANDARD 11)
 
+set(CMAKE_C_STANDARD 17)
+set(CMAKE_C_EXTENSIONS ON)
+
 add_definitions(-fPIC)
 add_definitions(-DTXMT_VERSION="0.1")
 if (DEFINED ENV{ENABLE_LOG})

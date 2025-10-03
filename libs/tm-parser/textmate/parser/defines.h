@@ -2,6 +2,7 @@
 #define PARSE_DEFINES_H
 
 #include <string>
+#include <cstdint> 
 
 #ifdef WIN64
 #include <BaseTsd.h>

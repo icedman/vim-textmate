@@ -1600,7 +1600,7 @@ st_update(st_table *tab, st_data_t key,
    different for ST_CHECK and when the current element is removed
    during traversing.  */
 static inline int
-st_general_foreach(st_table *tab, int (*func)(ANYARGS), st_update_callback_func *replace, st_data_t arg,
+st_general_foreach(st_table *tab, int (*func)(st_data_t, st_data_t, st_data_t, int/*ANYARGS*/), st_update_callback_func *replace, st_data_t arg,
 		   int check_p)
 {
     st_index_t bin;
